@@ -6,8 +6,59 @@ const Dentist = require('../models/Dentist');
 
 exports.getDentists = async (req, res, next) => {
     try{
-        const dentists = await Dentist.find();
-        res.status(200).json({success: true, count: dentists.length, data: dentists});
+        let query;
+        //copy req.query
+        const reqQuery = {...req.query};
+
+        //fields to exclude
+        const removeFields = ['select', 'sort', 'page', 'limit'];
+
+        //loop over remove fields and remove them from reqQuery
+        removeFields.forEach(param => delete reqQuery[param]);
+        console.log(reqQuery);
+
+        //Create query string to operator
+        let queryStr = JSON.stringify(reqQuery);
+        queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
+
+        //Finding resources
+        query = Dentist.find(JSON.parse(queryStr));
+        //to-do: add .populate('bookings') in line 25 after booking is done
+
+        //select fields
+        if(req.query.select){
+            const fields = req.query.select.split(',').join(' ');
+            query = query.select(fields);
+        }
+        //sort fields
+        if(req.query.sort){
+            const sortBy = req.query.sort.split(',').join(' ');
+            query = query.sort(sortBy);
+        }
+        else{
+            query = query.sort('name');
+        }
+        //pagination
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 25;
+        const startIndex = (page - 1)*limit;
+        const endIndex = page*limit;
+        const total = await Dentist.countDocuments();
+
+        query = query.skip(startIndex).limit(limit);
+        
+        //executing query
+        const dentists = await query;
+        
+        //pagination result
+        const pagination = {};
+        if(endIndex < total){
+            pagination.next = {page: page + 1, limit}
+        }
+        if(startIndex > 0){
+            pagination.prev = {page: page - 1, limit}
+        }
+        res.status(200).json({success: true, count: dentists.length, pagination, data: dentists});
     } catch(err){
         res.status(400).json({success: false});
     }
