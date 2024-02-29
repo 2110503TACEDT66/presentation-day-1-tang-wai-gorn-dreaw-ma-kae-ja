@@ -21,7 +21,7 @@ exports.getDentist = async (req, res, next) => {
     try{
         const dentist = await Dentist.findById(req.params.id);
         if(!dentist){
-            return res.status(400).json({success: false, message: `Cannot find a Dentist with ID ${req.params.id}`});
+            return res.status(400).json({success: false, message: `Cannot find a dentist with ID ${req.params.id}`});
         }
         res.status(200).json({success: true, data: dentist});
     } catch(err){
@@ -33,10 +33,22 @@ exports.getDentist = async (req, res, next) => {
 //@route POST /api/v1/dentists
 //@access Private
 
-exports.createDentist = async (req, res, next) => {
-    const dentist = await Dentist.create(req.body);
-    res.status(201).json({success:true, data:dentist});
+
+exports.createDentist = async (req, res, next) =>{
+    try{
+        const existDentist = await Dentist.findOne({name: req.body.name});
+        if(existDentist){
+            return res.status(400).json({success: false, message: 'Dentist with this name is already exist!' });
+        }
+
+        const dentist = await Dentist.create(req.body);
+        res.status(201).json({ success: true, data: dentist });
+    }catch(error) {
+        console.error(error);
+        res.status(400).json({success: false});
+    }
 }
+
 
 //@desc Update single dentist
 //@route PUT /api/v1/dentists/:id
@@ -50,7 +62,7 @@ exports.updateDentist =  async (req, res, next) => {
         });
 
         if(!dentist){
-            return res.status(400).json({success: false, message: `Cannot find a Dentist with ID ${req.params.id}`});
+            return res.status(400).json({success: false, message: `Cannot find a dentist with ID ${req.params.id}`});
         }
 
         res.status(200).json({success: true, data: dentist});
