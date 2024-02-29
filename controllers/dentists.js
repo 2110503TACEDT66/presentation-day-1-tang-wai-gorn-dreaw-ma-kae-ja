@@ -80,7 +80,7 @@ exports.deleteDentist = async (req, res, next) => {
         const dentist = await Dentist.findById(req.params.id);
 
         if(!dentist){
-            return res.status(400).json({success: false});
+            return res.status(400).json({success: false, message: `Cannot find a dentist with ID ${req.params.id}`});
         }
         await dentist.deleteOne();
         res.status(200).json({success: true, data: {}});
