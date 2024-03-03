@@ -49,18 +49,18 @@ exports.getBookings=async (req,res,next)=>{
 //@access Public
 exports.getBooking=async (req,res,next)=>{
     try{
-        const Booking= await Booking.findById(req.params.id).populate({
+        const booking= await Booking.findById(req.params.id).populate({
             path: 'dentist',
             select: 'name experience expertise'
         });
         
-        if(!Booking){
+        if(!booking){
             return res.status(404).json({success:false,message:`No Booking with the id of ${req.params.id}`});
         }
 
         res.status(200).json({
             success:true,
-            data:Booking
+            data:booking
         });
     }catch(error){
         console.log(error);
@@ -73,22 +73,22 @@ exports.getBooking=async (req,res,next)=>{
 //@access Private
 exports.addBooking=async (req,res,next)=>{
     try{
-        req.body.bookin=req.params.dentistId;
-        const bookin= await bookin.findById(req.params.dentistId);
+        req.body.dentist=req.params.dentistId;
+        const dentist = await Dentist.findById(req.params.dentistId);
         
-        if(!booking){
+        if(!dentist){
             return res.status(404).json({
                 success:false,
-                message:`No booking with the id of ${req.params.dentistId}`
+                message:`No dentist with the id of ${req.params.dentistId}`
             });
         }
 
         //add user Id to req.body
         req.body.user=req.user.id;
         //Check fot existed Booking
-        const existedBookings = await Booking.find({user:req.user.id});
-        //If the user is not an admin, they can only create 3 Booking.
-        if(existedBookings.length >= 1 && req.user.role !== 'admin'){
+        const existedBooking = await Booking.find({user:req.user.id});
+        //If the user is not an admin, they can only create 1 Booking.
+        if(existedBooking.length >= 1 && req.user.role !== 'admin'){
             return res.status(400).json({
                 success: false,
                 message: 
@@ -96,10 +96,10 @@ exports.addBooking=async (req,res,next)=>{
             });
         }
 
-        const Booking = await Booking.create(req.body);
+        const booking = await Booking.create(req.body);
         res.status(200).json({
             success:true,
-            data: Booking
+            data: booking
         });
 
     }catch(error){
@@ -116,9 +116,9 @@ exports.addBooking=async (req,res,next)=>{
 //@access Private
 exports.updateBooking =async (req,res,next)=>{
     try{
-        let Booking = await Booking.findById(req.params.id);
+        let booking = await Booking.findById(req.params.id);
         
-        if(!Booking){
+        if(!booking){
             return res.status(404).json({
                 success:false,
                 message:`No Booking with the id of ${req.params.id}`
@@ -126,20 +126,20 @@ exports.updateBooking =async (req,res,next)=>{
         }
 
         //User Booking ownership
-        if(Booking.user.toString()!== req.user.id && req.user.role !== 'admin'){
+        if(booking.user.toString()!== req.user.id && req.user.role !== 'admin'){
             return res.status(401).json({
                 success:false,
                 message:`User ${req.user.id} is not authorized to update this Booking`
             });
         }
 
-        Booking=await Booking.findByIdAndUpdate(req.params.id,req.body,{
+        booking=await Booking.findByIdAndUpdate(req.params.id,req.body,{
             new:true,
             runValidators:true
         });
         res.status(200).json({
             success:true,
-            data: Booking
+            data: booking
         });
 
     }catch(error){
@@ -156,9 +156,9 @@ exports.updateBooking =async (req,res,next)=>{
 //@access Private
 exports.deleteBooking =async (req,res,next)=>{
     try{
-        const Booking= await Booking.findById(req.params.id);
+        const booking= await Booking.findById(req.params.id);
         
-        if(!Booking){
+        if(!booking){
             return res.status(404).json({
                 success:false,
                 message:`No Booking with the id of ${req.params.id}`
@@ -166,14 +166,14 @@ exports.deleteBooking =async (req,res,next)=>{
         }
 
         //User Booking ownership
-        if(Booking.user.toString()!== req.user.id && req.user.role !== 'admin'){
+        if(booking.user.toString()!== req.user.id && req.user.role !== 'admin'){
             return res.status(401).json({
                 success:false,
                 message:`User ${req.user.id} is not authorized to delete this Booking`
             });
         }
         
-        await Booking.deleteOne();
+        await booking.deleteOne();
         res.status(200).json({
             success:true,
             data: {}

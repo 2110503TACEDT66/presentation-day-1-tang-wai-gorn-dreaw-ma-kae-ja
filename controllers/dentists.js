@@ -22,8 +22,7 @@ exports.getDentists = async (req, res, next) => {
         queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
 
         //Finding resources
-        query = Dentist.find(JSON.parse(queryStr));
-        //to-do: add .populate('bookings') in line 25 after booking is done
+        query = Dentist.find(JSON.parse(queryStr)).populate('bookings');
 
         //select fields
         if(req.query.select){
